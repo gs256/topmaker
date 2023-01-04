@@ -1,5 +1,4 @@
 test/
-in/
 out/
 __pycache__/
 .env

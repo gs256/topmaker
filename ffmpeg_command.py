@@ -1,17 +1,19 @@
 import glob
-
+import config
 
 def generate_command() -> str:
     number_duration = 2
     competitor_duration = 3
     transition_duration = 1
-    template = "ffmpeg {input} -c:v libx264 -filter_complex \"{filter}\" -pix_fmt yuvj422p -framerate 24 out.mp4"
-    numbers_wildcard = "testnum/*.*"
-    competitors_wildcard = "testcomp/*.*"
+    template = "ffmpeg {input} -c:v libx264 -filter_complex \"{filter}\" -pix_fmt yuvj422p -framerate 24 out/out.mp4"
+    numbers_wildcard = "out/numbers/*.*"
+    competitors_wildcard = "out/competitors/*.*"
     number_images = sorted(glob.glob(numbers_wildcard), reverse=True)
     competitor_images = sorted(glob.glob(competitors_wildcard), reverse=True)
+    assert(len(number_images) > 0)
+    assert(len(competitor_images) > 0)
     input = generate_ffmpeg_input(number_images, competitor_images, number_duration, competitor_duration, transition_duration)
-    filter = generate_complex_filter(len(number_images)+len(competitor_images), 854, 480, transition_duration, number_duration, competitor_duration)
+    filter = generate_complex_filter(len(number_images)+len(competitor_images), config.WIDTH, config.HEIGHT, transition_duration, number_duration, competitor_duration)
     command = template.format(input=input, filter=filter)
     return command
 
