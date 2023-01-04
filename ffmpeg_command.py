@@ -5,21 +5,22 @@ def generate_command() -> str:
     number_duration = 2
     competitor_duration = 3
     transition_duration = 1
-    template = "ffmpeg {input} -c:v libx264 -filter_complex \"{filter}\" -pix_fmt yuvj422p -framerate 24 out/out.mp4"
+    template = "ffmpeg {input} -c:v libx264 -filter_complex_script {filter} -pix_fmt yuvj422p -framerate 20 out/out.mp4"
     numbers_wildcard = "out/numbers/*.*"
     competitors_wildcard = "out/competitors/*.*"
     number_images = sorted(glob.glob(numbers_wildcard), reverse=True)
     competitor_images = sorted(glob.glob(competitors_wildcard), reverse=True)
     assert(len(number_images) > 0)
     assert(len(competitor_images) > 0)
+    input_count = len(number_images) * 2
     input = generate_ffmpeg_input(number_images, competitor_images, number_duration, competitor_duration, transition_duration)
-    filter = generate_complex_filter(len(number_images)+len(competitor_images), config.WIDTH, config.HEIGHT, transition_duration, number_duration, competitor_duration)
+    filter = generate_complex_filter(input_count, config.WIDTH, config.HEIGHT, transition_duration, number_duration, competitor_duration)
     command = template.format(input=input, filter=filter)
     return command
 
 
 def generate_ffmpeg_input(number_images: list, competitor_images: list, number_duration: int, competitor_duration: int, transition_duration: int) -> str:
-    assert(len(number_images) == len(competitor_images))
+    assert(len(number_images) <= len(competitor_images))
     result = ""
 
     # FIXME: last one is longer due to the transition calculation
@@ -48,7 +49,11 @@ def generate_complex_filter(input_count: int, width: int, height: int, transitio
             addition += transition_output_template.format(next=i+1)
         result += addition
 
-    return result
+    out_path = "out/filter_complex_script.txt"
+    with open(out_path, "w+") as file:
+        file.write(result)
+
+    return out_path
 
 
 result = generate_command()
