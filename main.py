@@ -3,7 +3,6 @@ import glob
 import subprocess
 import os
 
-# FIXME: automate all the previous steps
 
 numbers_wildcard = "out/numbers/*.*"
 competitors_wildcard = "out/competitors/*.*"
@@ -28,6 +27,8 @@ def make_batch(offset: int, count: int):
         print(f"Error occured. Exiting")
         exit()
 
+
+# FIXME: automate all the previous steps
 
 if top_length <= max_batch_size:
     command = ffmpeg_command.generate_for_images(number_images, competitor_images, f"out/top.mp4")

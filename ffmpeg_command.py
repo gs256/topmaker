@@ -1,5 +1,6 @@
 import config
 import subprocess
+import random
 
 transition_duration = 1
 
@@ -34,6 +35,56 @@ def generate_video_input(videos: list) -> str:
     return result
 
 
+def get_fade() -> str:
+    fades = [
+        "fade",
+        "fadeblack",
+        "fadewhite",
+        "wipeleft",
+        "wiperight",
+        "wipeup",
+        "wipedown",
+        "slideleft",
+        "slideright",
+        "slideup",
+        "slidedown",
+        "smoothleft",
+        "smoothright",
+        "smoothup",
+        "smoothdown",
+        "rectcrop",
+        "circlecrop",
+        "circleclose",
+        "circleopen",
+        "horzclose",
+        "horzopen",
+        "vertclose",
+        "vertopen",
+        "diagbl",
+        "diagbr",
+        "diagtl",
+        "diagtr",
+        "hlslice",
+        "hrslice",
+        "vuslice",
+        "vdslice",
+        "dissolve",
+        "pixelize",
+        "radial",
+        "hblur",
+        "wipetl",
+        "wipetr",
+        "wipebl",
+        "wipebr",
+        "fadegrays",
+        "squeezev",
+        "squeezeh",
+        "zoomin",
+    ]
+    index = random.randrange(0, len(fades)-1)
+    return fades[index]
+
+
 def generate_image_input(number_images: list, competitor_images: list, number_duration: int, competitor_duration: int, transition_duration: int) -> str:
     assert(len(number_images) <= len(competitor_images))
     result = ""
@@ -47,7 +98,7 @@ def generate_image_input(number_images: list, competitor_images: list, number_du
 
 
 def generate_filter_for_videos(videos: list, transition_duration: int) -> str:
-    template = "[{input1}][{input2}]xfade=radial:duration={duration}:offset={offset}"
+    template = "[{input1}][{input2}]xfade=transition={fade}:duration={duration}:offset={offset}"
     result = ""
 
     def calculate_offset(videos: list, index: int, transition_duration: int) -> int:
@@ -60,7 +111,7 @@ def generate_filter_for_videos(videos: list, transition_duration: int) -> str:
     for i in range(len(videos)-1):
         offset = calculate_offset(videos, i, transition_duration)
         input1 = f"{i}:v" if i == 0 else f"v{i}o"
-        addition = template.format(input1=input1, input2=f"{i+1}:v", duration=transition_duration, offset=offset)
+        addition = template.format(input1=input1, input2=f"{i+1}:v", fade=get_fade(), duration=transition_duration, offset=offset)
         if i < len(videos) - 2:
             addition += "[v{next}o];".format(next=i+1)
         result += addition
@@ -80,7 +131,7 @@ def get_video_duration(path: str) -> int:
 
 def generate_filter_for_images(input_count: int, width: int, height: int, transition_duration: int, number_duration: int, competitor_duration: int) -> str:
     input_config_template = "[{index}:v]scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1[v{index}];"
-    transition_template = "[{input1}][{input2}]xfade=transition=radial:duration={duration}:offset={offset}"
+    transition_template = "[{input1}][{input2}]xfade=transition={fade}:duration={duration}:offset={offset}"
     transition_output_template = "[v{next}o];"
     result = ""
 
@@ -91,7 +142,7 @@ def generate_filter_for_images(input_count: int, width: int, height: int, transi
     for i in range(input_count-1):
         offset = (number_duration+competitor_duration)*((i+1)//2) + number_duration*((i+1)%2)
         input1 = f"v{i}" if i == 0 else f"v{i}o"
-        addition = transition_template.format(input1=input1, input2=f"v{i+1}", duration=transition_duration, offset=offset)
+        addition = transition_template.format(input1=input1, input2=f"v{i+1}", fade=get_fade(), duration=transition_duration, offset=offset)
         if i < input_count - 2:
             addition += transition_output_template.format(next=i+1)
         result += addition
