@@ -15,9 +15,6 @@ top_length = len(number_images)
 if len(competitor_images) > top_length:
     competitor_images = competitor_images[:top_length]
 
-# number of simultaneously opened files will be twice as big
-max_batch_size = 200
-pictures_done = 0
 
 
 def make_batch(offset: int, count: int):
@@ -28,19 +25,42 @@ def make_batch(offset: int, count: int):
         exit()
 
 
-# FIXME: automate all the previous steps
+def render_top_video():
+    global number_images, competitor_images, top_length
 
-if top_length <= max_batch_size:
-    command = ffmpeg_command.generate_for_images(number_images, competitor_images, f"out/top.mp4")
+    # number of simultaneously opened files will be twice as big
+    max_batch_size = 200
+    pictures_done = 0
+
+    if top_length <= max_batch_size:
+        command = ffmpeg_command.generate_for_images(number_images, competitor_images, f"out/top.mp4")
+        subprocess.run(command, shell=True)
+    else:
+        os.makedirs("out/batches", exist_ok=True)
+
+        while pictures_done < top_length:
+            make_batch(pictures_done, max_batch_size)
+            pictures_done += max_batch_size
+
+        # batches = sorted(glob.glob("out/batches/*"))
+        # merge_command = ffmpeg_command.generate_for_videos(batches, "out/top.mp4")
+        # subprocess.run(merge_command, shell=True)
+
+
+def compose_final_video(intro_file: str, outro_file: str, top_files: list, output_path: str):
+    template = "ffmpeg {input} -f concat -safe 0 -i out/music-concat.txt -shortest -filter_complex \"{filter}\" -b:v 250k -b:a 55k -preset ultrafast '{output}'"
+    videos = []
+    videos.append(intro_file)
+    videos.extend(top_files)
+    videos.append(outro_file)
+    input = ffmpeg_command.generate_video_input(videos)
+    filter = ffmpeg_command.generate_filter_for_videos(videos, 1)
+    command = template.format(input=input, filter=filter, output=output_path)
+    print(command)
     subprocess.run(command, shell=True)
-else:
-    os.makedirs("out/batches", exist_ok=True)
 
-    while pictures_done < top_length:
-        make_batch(pictures_done, max_batch_size)
-        pictures_done += max_batch_size
 
-    batches = sorted(glob.glob("out/batches/*"))
-    print(f"Found {len(batches)} batches")
-    merge_command = ffmpeg_command.generate_for_videos(batches, "out/top.mp4")
-    subprocess.run(merge_command, shell=True)
+# FIXME: automate all the previous steps
+# render_top_video()
+
+compose_final_video("out/intro.mp4", "out/outro.mp4", sorted(glob.glob("out/batches/*")), "out/final.mp4")

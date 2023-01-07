@@ -68,7 +68,7 @@ def get_fade() -> str:
         "hrslice",
         "vuslice",
         "vdslice",
-        "dissolve",
+        # "dissolve",
         "pixelize",
         "radial",
         "hblur",
@@ -76,7 +76,7 @@ def get_fade() -> str:
         "wipetr",
         "wipebl",
         "wipebr",
-        "fadegrays",
+        # "fadegrays",
         "squeezev",
         "squeezeh",
         "zoomin",
@@ -105,7 +105,7 @@ def generate_filter_for_videos(videos: list, transition_duration: int) -> str:
         result = 0
         for i in range(index+1):
             result += get_video_duration(videos[i])
-        result -= transition_duration
+        result -= transition_duration * (i+1)
         return result
 
     for i in range(len(videos)-1):
