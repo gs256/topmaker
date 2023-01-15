@@ -101,7 +101,7 @@ def render_top():
         return
 
     if len(competitor_images) > top_length:
-        competitor_images = competitor_images[:top_length]
+        competitor_images = competitor_images[len(competitor_images)-top_length:]
 
     # number of simultaneously opened files will be twice as big
     max_batch_size = 200

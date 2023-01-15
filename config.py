@@ -5,4 +5,4 @@ dotenv.load_dotenv()
 
 SERPAPI_KEY = os.getenv("SERPAPI_KEY")
 HEIGHT = 480
-WIDTH = 854
+WIDTH = 640
